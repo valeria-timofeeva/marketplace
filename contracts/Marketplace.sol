@@ -8,8 +8,8 @@ import "./NFTCollection.sol";
 
 error CannotBeZero();
 error ItemNotOnSold();
-error AuctionIsMessing();
-error OnlySellerCancelAuction();
+error AuctionIsMissing();
+error OnlySellerCancel();
 error BidTooLow();
 error AuctionEnded();
 error AuctionIsActive();
@@ -80,7 +80,7 @@ contract Marketplace is Ownable, ERC721Holder {
 
     /// @dev Set auction period
     function setAuctionPeriod(uint256 auctionPeriod) external onlyOwner {
-        if (period == 0) revert CannotBeZero();
+        if (auctionPeriod == 0) revert CannotBeZero();
         period = auctionPeriod;
     }
 
@@ -109,9 +109,9 @@ contract Marketplace is Ownable, ERC721Holder {
     /// @dev Cancel token from marketplace
     function cancel(uint256 tokenId) external {
         if (_sales[tokenId].price == 0) revert ItemNotOnSold();
-        if (_auctions[tokenId].seller != msg.sender)
-            revert OnlySellerCancelAuction();
-        delete _auctions[tokenId];
+        if (_sales[tokenId].seller != msg.sender)
+            revert OnlySellerCancel();
+        delete _sales[tokenId];
 
         nft.safeTransferFrom(address(this), msg.sender, tokenId);
         emit Cancel(msg.sender, tokenId);
@@ -164,6 +164,7 @@ contract Marketplace is Ownable, ERC721Holder {
         }
 
         token.safeTransferFrom(msg.sender, address(this), price);
+        _auction.bid = price;
         _auction.bidder = msg.sender;
         _auction.totalBids++;
         _auctions[tokenId] = _auction;
@@ -200,7 +201,7 @@ contract Marketplace is Ownable, ERC721Holder {
     /// @dev Return current auction info
     function auctionInfo(uint256 tokenId) public view returns (Auction memory) {
         Auction memory _auction = _auctions[tokenId];
-        if (_auction.seller == address(0)) revert AuctionIsMessing();
+        if (_auction.seller == address(0)) revert AuctionIsMissing();
         return _auction;
     }
 }
