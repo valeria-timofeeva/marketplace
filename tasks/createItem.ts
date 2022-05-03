@@ -1,5 +1,4 @@
 import { task } from "hardhat/config";
-import { concat, parseUnits } from "ethers/lib/utils";
 
 const contractInfo = require("./deploy.json");
 
